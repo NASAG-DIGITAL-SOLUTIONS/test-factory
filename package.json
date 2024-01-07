@@ -1,7 +1,9 @@
 {
     "name": "@testfactory/core",
-    "version": "1.0.0",
-    "files": ["umd"],
+    "version": "1.1.0",
+    "files": [
+        "umd"
+    ],
     "description": "Collection of usefull methods for testing on the browser console",
     "type": "module",
     "main": "umd/core.min.js",
