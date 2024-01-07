@@ -1,6 +1,6 @@
-// import { z } from 'zod'
 import countries from './countries.js'
 import { consoles, styleToString, styles } from './consoles.js'
+import { levenshteinDistance } from './algorithms.js'
 import './styles.css'
 
 /**
@@ -172,8 +172,11 @@ function targetText(targetSelector, targetPath) {
                 /** @type {HTMLSelectElement} */ (targetElement.data).options
             ).forEach((option) => text.push(option.label))
             break
-        default: // FOR ALL SIMPLE HTML ELEMENTS WERE .INNERTEXT IS SUFFICIENT
-            text.push(targetElement.data.toString())
+
+        // FOR ALL SIMPLE HTML ELEMENTS WERE .INNERTEXT IS SUFFICIENT
+        default:
+            // @ts-ignore
+            text.push(targetElement.data.innerText)
             break
     }
 
@@ -183,11 +186,103 @@ function targetText(targetSelector, targetPath) {
     }
 }
 
+/**
+ * Calculate the diffrence between two Strings
+ * @param {string} longest - the longest string provided first
+ * @param {string} shortest - the shortest string provided second
+ * @returns {number} the difference between two Strings
+ */
+function editDistance(longest, shortest) {
+    const costs = []
+    for (let i = 0; i <= longest.length; i++) {
+        let lastValue = i
+        for (let j = 0; j <= shortest.length; j++) {
+            if (i == 0) costs[j] = j
+            else {
+                if (j > 0) {
+                    let newValue = costs[j - 1]
+                    if (longest.charAt(i - 1) != shortest.charAt(j - 1)) {
+                        newValue =
+                            Math.min(Math.min(newValue, lastValue), costs[j]) +
+                            1
+                    }
+                    costs[j - 1] = lastValue
+                    lastValue = newValue
+                }
+            }
+        }
+        if (i > 0) costs[shortest.length] = lastValue
+    }
+    return costs[shortest.length]
+}
+
+/**
+ * Calculat the similatity between two Strings using Levenshtein Distance Algorithm
+ * @param {string} [source=''] - String from testData
+ * @param {string} [target=''] - String from targetElement
+ * @returns {number} a "Simitarity Scoore" from 0 to 1
+ */
+function similarity(source = '', target = '') {
+    if (target == null) target = ''
+    if (source == null) source = ''
+    const shortLongest = [source, target].sort(function (a, b) {
+        // ASC  -> a.length - b.length
+        // DESC -> b.length - a.length
+        return b.length - a.length
+    })
+
+    if (shortLongest[0].length == 0) return 1.0
+    return (
+        (shortLongest[0].length -
+            editDistance(shortLongest[0], shortLongest[1])) /
+        shortLongest[0].length
+    )
+}
+
+/**
+ * Calculate the similarity of two string and the strings to booth sides of the array
+ * in function of the diffrence between the two arrays
+ * @example
+ * rangeSimilarity('str', ['str-2', 'str-1', 'str', 'str+1', 'str+2'], 3, 2);
+ * returns [0.5, 0.7, 0, 0.1, 0]
+ * @param {string} targetWord
+ * @param {string[]} sourceWords
+ * @param {number} wordIndex
+ * @param {number} diff
+ * @returns {number[]}
+ */
+function rangeSimilarity(targetWord, sourceWords, wordIndex, diff) {
+    const similarities = []
+    for (let i = wordIndex - diff; i <= wordIndex + diff; ++i) {
+        similarities.push(similarity(targetWord, sourceWords[i]))
+    }
+    return similarities
+}
+
+/**
+ * Find the index of the closest string to 'target' in 'sources'
+ * @param {string} target - The phrase to find a match for
+ * @param {string[]} sources - The test data to test against
+ * @returns {number} the index of the closest string to 'target' in 'sources'
+ */
+function matchTargetToSource(target, sources) {
+    const similarityScores = sources.map((source) => similarity(source, target))
+    const bestSourceIndex = similarityScores.indexOf(
+        Math.max.apply(null, similarityScores)
+    )
+    return bestSourceIndex
+}
+
 export {
     defaultOptions,
     consoles,
     styleToString,
     notStrings,
     elementGetter,
-    targetText
+    targetText,
+    editDistance,
+    levenshteinDistance,
+    similarity,
+    rangeSimilarity,
+    matchTargetToSource
 }
