@@ -31,7 +31,7 @@ import './styles.css'
  * The prefered return type for all functions in $tf
  * @typedef {object} ReturnNode
  * @property {false} error
- * @property {Node | HTMLCollectionOf<Element> | NodeListOf<HTMLElement> | HTMLCollection | HTMLElement} data
+ * @property {Element} data
  */
 
 /**
@@ -102,10 +102,12 @@ function elementGetter(
             temp = document.getElementById(targetPath)
             break
         case 'name':
-            temp = document.getElementsByName(targetPath)[elementIndex]
+            temp = document.getElementsByName(targetPath).item(elementIndex)
             break
         case 'class':
-            temp = document.getElementsByClassName(targetPath)[elementIndex]
+            temp = document
+                .getElementsByClassName(targetPath)
+                .item(elementIndex)
             break
         case 'xpath':
             temp = document.evaluate(
@@ -132,6 +134,7 @@ function elementGetter(
     } else {
         return {
             error: false,
+            // @ts-ignore
             data: temp
         }
     }
@@ -489,7 +492,7 @@ function checkWording(targetSelector, targetPath, testData = {}, options) {
         }
     }
 
-    // injectTooltip('string-matching', targetSelector, targetPath, testedWords)
+    injectTooltip('string-matching', targetSelector, targetPath, testedWords)
 
     console.info(
         testedWords.map((word) => `%c${word.text}`).join(' '),
@@ -501,6 +504,56 @@ function checkWording(targetSelector, targetPath, testData = {}, options) {
     return `✅ All Done, see stats above for ${
         countries[targetLocale.toUpperCase()].countryNameEn
     } ${countries[targetLocale.toUpperCase()].flag}`
+}
+
+/**
+ *
+ * @param {string} invoker - the name of the inviking function, will be used for tooltip id
+ * @param {'class' | 'name' | 'id' | 'xpath'} targetSelector - enum - one of the supported selectors types
+ * @param {string} targetPath - target element path
+ * @param {{text: string, status: 0 | 1 | 2 | 3 | 4}[]} words - the tooltip text
+ * @returns {ReturnErr | void}
+ */
+function injectTooltip(invoker, targetSelector, targetPath, words) {
+    const elTarget = elementGetter(targetSelector, targetPath)
+    if (elTarget.error) {
+        return elTarget
+    }
+
+    const tooltip = document.createElement('div')
+
+    tooltip.setAttribute('id', `tf-tooltip-${invoker}`)
+    tooltip.className = 'tf-tooltip'
+    let span
+    words.forEach((word, index) => {
+        span = document.createElement('span')
+        span.setAttribute('index', `${index}`)
+        span.textContent = word.text
+
+        switch (word.status) {
+            case 0:
+                span.className = 'word-similar'
+                break
+            case 1:
+                span.className = 'word-not-similar'
+                break
+            case 2:
+                span.className = 'word-some-what-similar'
+                break
+            case 3:
+                span.className = 'word-position-warning'
+                break
+            case 4:
+                span.className = 'word-missing'
+                break
+        }
+
+        tooltip.appendChild(span)
+    })
+
+    elTarget.data.classList.add('tf-tooltip-parent')
+
+    elTarget.data.appendChild(tooltip)
 }
 
 export {
