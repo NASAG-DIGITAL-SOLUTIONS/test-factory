@@ -1,0 +1,57 @@
+.tf-tooltip-parent:hover div.tf-tooltip {
+    opacity: 1;
+}
+
+.tf-tooltip {
+    opacity: 0;
+    transition: 0.3s opacity;
+    position: absolute;
+    font-family: Arial;
+    font-weight: bold;
+    padding: 3px 10px 3px 10px;
+    border-radius: 5px 5px 5px 5px;
+    color: #ffffffcc;
+    background-color: #abcefc;
+    margin-top: 20px;
+    max-width: 425px;
+    right: 10%;
+    z-index: 10;
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: baseline;
+}
+
+.tf-tooltip span {
+    margin-right: 5px;
+}
+
+.tf-tooltip span.word-similar {
+    color: #008000;
+}
+
+.tf-tooltip span.word-not-similar {
+    color: #ffffff;
+    background-color: #ff0000;
+    font-style: italic;
+    text-decoration: line-through;
+}
+
+.tf-tooltip span.word-some-what-similar {
+    color: #ffffff;
+    background-color: #ff0000;
+    font-style: italic;
+    text-decoration: underline;
+}
+
+.tf-tooltip span.word-position-warning {
+    color: #f0a415;
+}
+
+.tf-tooltip span.word-missing {
+    color: #ff0000;
+    font-style: italic;
+    text-decoration: underline;
+}
+
