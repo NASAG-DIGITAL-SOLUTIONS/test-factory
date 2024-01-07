@@ -1,0 +1,22 @@
+{
+    "trailingComma": "none",
+    "tabWidth": 4,
+    "useTabs": false,
+    "printWidth": 80,
+    "semi": false,
+    "singleQuote": true,
+    "jsxSingleQuote": true,
+    "bracketSpacing": true,
+    "arrowParens": "always",
+    "quoteProps": "as-needed",
+    "overrides": [
+        {
+            "files": ["*.json", ".prettierrc", ".releaserc"],
+            "options": { "parser": "json" }
+        },
+        {
+            "files": "*.md",
+            "options": { "parser": "markdown" }
+        }
+    ]
+}

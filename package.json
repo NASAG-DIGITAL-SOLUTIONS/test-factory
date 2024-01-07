@@ -1,0 +1,73 @@
+{
+    "name": "@testfactory/core",
+    "version": "0.0.0-development",
+    "files": ["umd"],
+    "description": "Collection of usefull methods for testing on the browser console",
+    "type": "module",
+    "main": "umd/core.min.js",
+    "engines": {
+        "node": ">=16"
+    },
+    "packageManager": "pnpm@8.12.1",
+    "scripts": {
+        "test": "echo \"Error: no test specified\"",
+        "build": "pnpm test && rm -rf umd && webpack-cli",
+        "format:check": "pnpm exec prettier --check .",
+        "format:fix": "pnpm exec prettier --write .",
+        "commit": "pnpm format:check && git add . && git-cz",
+        "semantic-release:debug": "npm run semantic-release --dry-run --no-ci --debug",
+        "semantic-release": "semantic-release"
+    },
+    "keywords": [
+        "strings",
+        "similar",
+        "difference",
+        "similarity",
+        "compare",
+        "comparison",
+        "degree",
+        "match",
+        "matching",
+        "dice",
+        "levenshtein"
+    ],
+    "private": false,
+    "author": {
+        "name": "Cherif Bekhtari",
+        "email": "bekhtari@nasag.fr",
+        "url": "https://www.testfactory.dev"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "license": "MIT",
+    "devDependencies": {
+        "@semantic-release/changelog": "6.0.3",
+        "@semantic-release/commit-analyzer": "11.1.0",
+        "@semantic-release/exec": "6.0.3",
+        "@semantic-release/git": "10.0.1",
+        "@semantic-release/github": "9.2.6",
+        "@semantic-release/npm": "11.0.2",
+        "@semantic-release/release-notes-generator": "12.1.0",
+        "@types/node": "^20.10.5",
+        "commitizen": "4.3.0",
+        "conventional-changelog-conventionalcommits": "7.0.2",
+        "css-loader": "6.8.1",
+        "cz-conventional-changelog": "3.3.0",
+        "mini-css-extract-plugin": "2.7.6",
+        "prettier": "3.1.1",
+        "semantic-release": "^22.0.12",
+        "typescript": "5.3.3",
+        "webpack": "^5.89.0",
+        "webpack-cli": "^5.1.4"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/NASAG-DIGITAL-SOLUTIONS/test-factory.git"
+    },
+    "config": {
+        "commitizen": {
+            "path": "./node_modules/cz-conventional-changelog"
+        }
+    }
+}
