@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/NASAG-DIGITAL-SOLUTIONS/test-factory/compare/v1.1.0...v1.1.1) (2024-01-09)
+
+
+### 🐛  Bug Fixes
+
+* **core:** fixed tooltip z-index issue ([4aeab42](https://github.com/NASAG-DIGITAL-SOLUTIONS/test-factory/commit/4aeab42f37470803c4ca9cfdceb451b866975a14))
+
 ## [1.1.0](https://github.com/NASAG-DIGITAL-SOLUTIONS/test-factory/compare/v1.0.0...v1.1.0) (2024-01-07)
 
 ### ✨ Features & Enhancements
