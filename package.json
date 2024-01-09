@@ -1,9 +1,7 @@
 {
     "name": "@testfactory/core",
     "version": "1.1.0",
-    "files": [
-        "umd"
-    ],
+    "files": ["umd"],
     "description": "Collection of usefull methods for testing on the browser console",
     "type": "module",
     "main": "umd/core.min.js",
@@ -16,7 +14,7 @@
         "build": "pnpm test && rm -rf umd && webpack-cli",
         "format:check": "pnpm exec prettier --check .",
         "format:fix": "pnpm exec prettier --write .",
-        "commit": "pnpm format:check && git add . && git-cz",
+        "commit": "pnpm format:check && pnpm build && git add . && git-cz",
         "semantic-release:debug": "npm run semantic-release --dry-run --no-ci --debug",
         "semantic-release": "semantic-release"
     },

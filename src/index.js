@@ -516,8 +516,26 @@ function checkWording(targetSelector, targetPath, testData = {}, options) {
  */
 function injectTooltip(invoker, targetSelector, targetPath, words) {
     const elTarget = elementGetter(targetSelector, targetPath)
+
     if (elTarget.error) {
         return elTarget
+    }
+
+    const targetParent = elTarget.data.parentElement
+
+    if (targetParent == null) {
+        return {
+            error: true,
+            message: " ❌ the target's parent element can't be 'NULL' !"
+        }
+    }
+
+    const wordClasses = {
+        0: 'word-similar',
+        1: 'word-not-similar',
+        2: 'word-some-what-similar',
+        3: 'word-position-warning',
+        4: 'word-missing'
     }
 
     const tooltip = document.createElement('div')
@@ -529,31 +547,13 @@ function injectTooltip(invoker, targetSelector, targetPath, words) {
         span = document.createElement('span')
         span.setAttribute('index', `${index}`)
         span.textContent = word.text
-
-        switch (word.status) {
-            case 0:
-                span.className = 'word-similar'
-                break
-            case 1:
-                span.className = 'word-not-similar'
-                break
-            case 2:
-                span.className = 'word-some-what-similar'
-                break
-            case 3:
-                span.className = 'word-position-warning'
-                break
-            case 4:
-                span.className = 'word-missing'
-                break
-        }
+        span.className = wordClasses[word.status]
 
         tooltip.appendChild(span)
     })
 
-    elTarget.data.classList.add('tf-tooltip-parent')
-
-    elTarget.data.appendChild(tooltip)
+    targetParent.classList.add('tf-tooltip-parent')
+    targetParent.appendChild(tooltip)
 }
 
 export {
@@ -568,5 +568,6 @@ export {
     similarity,
     rangeSimilarity,
     matchTargetToSource,
-    checkWording
+    checkWording,
+    injectTooltip
 }
