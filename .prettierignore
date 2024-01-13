@@ -6,3 +6,4 @@ build/
 umd/
 coverage/
 CHANGELOG.md
+*-lock.yaml

@@ -6,7 +6,7 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 export default {
-    entry: ['./src/index.js'],
+    entry: ['./src/index.js', './src/styles.css'],
     mode: 'production',
     externals: 'window',
     output: {
@@ -15,6 +15,8 @@ export default {
         library: '@testfactory/core',
         libraryTarget: 'umd'
     },
+
+    // setupTestFrameworkScriptFile: '/bin/jest.js',
 
     module: {
         rules: [

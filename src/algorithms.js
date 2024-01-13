@@ -4,7 +4,7 @@
  * @param {string} b
  * @return {number}
  */
-function levenshteinDistance(a, b) {
+function levenshteinDistance(a = '', b = '') {
     // Create empty edit distance matrix for all possible modifications of
     // substrings of a to substrings of b.
     const distanceMatrix = Array(b.length + 1)

@@ -1,7 +1,6 @@
 import countries from './countries.js'
 import { consoles, styleToString, styles } from './consoles.js'
 import { levenshteinDistance } from './algorithms.js'
-import './styles.css'
 
 /**
  * Stats from the comparison of two phrases
@@ -66,7 +65,7 @@ const defaultOptions = {
  * @returns {boolean} Boolean, true if any value is not of type String
  */
 function notStrings(values) {
-    if (!Array.isArray(values) || !values.length) return true
+    if (!Array.isArray(values) || values.length < 2) return true
     return !values.every(
         (value) => typeof value === 'string' || value instanceof String
     )
