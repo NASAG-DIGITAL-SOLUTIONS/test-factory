@@ -13,10 +13,10 @@
         "test:unit": "node --experimental-vm-modules node_modules/jest/bin/jest.js --env=jsdom --coverage",
         "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --env=jsdom --watch",
         "test:e2e": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
-        "build": "pnpm test:unit && rm -rf umd && webpack-cli",
+        "build": "rm -rf umd && webpack-cli",
         "format:check": "pnpm exec prettier --check .",
         "format:fix": "pnpm exec prettier --write .",
-        "commit": "pnpm format:check && pnpm build && git add . && git-cz",
+        "commit": "pnpm format:check && pnpm test:unit && pnpm build && git add . && git-cz",
         "semantic-release:debug": "npm run semantic-release --dry-run --no-ci --debug",
         "semantic-release": "semantic-release"
     },
