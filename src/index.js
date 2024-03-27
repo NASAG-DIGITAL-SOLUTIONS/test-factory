@@ -46,6 +46,14 @@ import { levenshteinDistance } from './algorithms.js'
  * @property {{clearBefore: boolean, hasBackground: boolean}} console
  */
 
+/**
+ * Options Input object - used by all methods
+ * @typedef {object} OptionsInput
+ * @property {number} [elementIndex]
+ * @property {{upper: number, lower: number}} [similarityIndex]
+ * @property {{clearBefore: boolean, hasBackground: boolean}} [console]
+ */
+
 /** @type {Options} */
 const defaultOptions = {
     elementIndex: 0,
@@ -281,10 +289,60 @@ function matchTargetToSource(target, sources) {
 
 /**
  *
+ * @param {string} invoker - the name of the inviking function, will be used for tooltip id
+ * @param {'class' | 'name' | 'id' | 'xpath'} targetSelector - enum - one of the supported selectors types
+ * @param {string} targetPath - target element path
+ * @param {{text: string, status: 0 | 1 | 2 | 3 | 4}[]} words - the tooltip text
+ * @returns {ReturnErr | void}
+ */
+function injectTooltip(invoker, targetSelector, targetPath, words) {
+    const elTarget = elementGetter(targetSelector, targetPath)
+
+    if (elTarget.error) {
+        return elTarget
+    }
+
+    const targetParent = elTarget.data.parentElement
+
+    if (targetParent == null) {
+        return {
+            error: true,
+            message: " ❌ the target's parent element can't be 'NULL' !"
+        }
+    }
+
+    const wordClasses = {
+        0: 'word-similar',
+        1: 'word-not-similar',
+        2: 'word-some-what-similar',
+        3: 'word-position-warning',
+        4: 'word-missing'
+    }
+
+    const tooltip = document.createElement('div')
+
+    tooltip.setAttribute('id', `tf-tooltip-${invoker}`)
+    tooltip.className = 'tf-tooltip'
+    let span
+    words.forEach((word, index) => {
+        span = document.createElement('span')
+        span.setAttribute('index', `${index}`)
+        span.textContent = word.text
+        span.className = wordClasses[word.status]
+
+        tooltip.appendChild(span)
+    })
+
+    targetParent.classList.add('tf-tooltip-parent')
+    targetParent.appendChild(tooltip)
+}
+
+/**
+ *
  * @param {'class' | 'name' | 'id' | 'xpath'} targetSelector - enum - one of the supported selectors types.
  * @param {string} targetPath - target element path.
  * @param {Object.<string, string[]>} testData - test data by local.
- * @param {Options} [options]
+ * @param {OptionsInput} [options]
  * @return {ReturnErr | ReturnStr | string}
  */
 function checkWording(targetSelector, targetPath, testData = {}, options) {
@@ -507,52 +565,194 @@ function checkWording(targetSelector, targetPath, testData = {}, options) {
 
 /**
  *
- * @param {string} invoker - the name of the inviking function, will be used for tooltip id
- * @param {'class' | 'name' | 'id' | 'xpath'} targetSelector - enum - one of the supported selectors types
- * @param {string} targetPath - target element path
- * @param {{text: string, status: 0 | 1 | 2 | 3 | 4}[]} words - the tooltip text
- * @returns {ReturnErr | void}
+ * @param {string} targetWording - enum - one of the supported selectors types.
+ * @param {string} testWording - target element path.
+ * @param {OptionsInput} [options]
+ * @return {SimilarityMatrice[][] | ReturnErr | ReturnStr | string}
  */
-function injectTooltip(invoker, targetSelector, targetPath, words) {
-    const elTarget = elementGetter(targetSelector, targetPath)
+function checkPropertiesWording(targetWording, testWording, options) {
+    // NOTHIG GOES BEFORE THIS LINE
+    const _options = { ...defaultOptions, ...options }
 
-    if (elTarget.error) {
-        return elTarget
+    // consoles.clear(_options.console.clearBefore)
+
+    /** @type {stringSimilarityStats} */
+    const stats = {
+        similar: 0,
+        someWhatSimilar: 0,
+        notSimilar: 0,
+        positionWarnning: 0,
+        missing: 0
+        // extra: 0
     }
 
-    const targetParent = elTarget.data.parentElement
+    // checking for input errors
+    switch (true) {
+        case testWording == undefined:
+            return {
+                error: true,
+                message: ' ❌ The wording to test is undefined !'
+            }
+        case Object.values(_options.similarityIndex).some(
+            (option) => typeof option !== 'number'
+        ) ||
+            Object.values(_options.similarityIndex).some(
+                (option) => option < 0 || option > 1
+            ):
+            return {
+                error: true,
+                message:
+                    ' ❌ similarity indexes (upper & lower) must be a number, between 0 and 1 !'
+            }
+        case typeof testWording !== 'string':
+            return {
+                error: true,
+                message: ` ❌ Test wordign is not of type 'String' !`
+            }
+        case typeof targetWording !== 'string':
+            return {
+                error: true,
+                message: ` ❌ Test wordign is not of type 'String' !`
+            }
+    }
 
-    if (targetParent == null) {
-        return {
-            error: true,
-            message: " ❌ the target's parent element can't be 'NULL' !"
+    /** @type {string[]} */
+    const targetWords = targetWording.split(' ')
+
+    /** @type {string[]} */
+    const testWords = testWording.split(' ')
+
+    /** @type {string[]} */
+    const cssRules = []
+    /** @type {{text: string, status: 0 | 1 | 2 | 3 | 4}[]} */
+    const testedWords = []
+
+    const diff = Math.abs(testWords.length - targetWords.length)
+
+    /** @type {SimilarityMatrice[]} */
+    const targetSimilarityMatrice = targetWords.map((targetWord, index) => [
+        targetWord,
+        rangeSimilarity(targetWord, testWords, index, diff)
+    ])
+
+    /** @type {SimilarityMatrice[]} */
+    const sourceSimilarityMatrice = testWords.map((testWord, index) => [
+        testWord,
+        rangeSimilarity(testWord, targetWords, index, diff)
+    ])
+
+    // [CONDINIONAL] Injecting the missing words in targetWording
+    if (diff > 0) {
+        /** @type {{index: number; data: SimilarityMatrice}[]} */
+        let diffMatrice = []
+
+        sourceSimilarityMatrice
+            .map(
+                (array, index) =>
+                    array[1].every(
+                        (value) => value < _options.similarityIndex.upper
+                    ) && {
+                        /** @type {number} */
+                        index: index,
+                        /** @type {SimilarityMatrice} */
+                        data: [array[0], array[1].fill(0)]
+                    }
+            )
+            .forEach((item) => {
+                if (item) diffMatrice.push(item)
+            })
+
+        if (diffMatrice.length > diff) {
+            diffMatrice.sort(function (a, b) {
+                const aa = Math.max(...a.data[1])
+                const bb = Math.max(...b.data[1])
+                return aa - bb
+            })
+            diffMatrice = diffMatrice.slice(0, diff)
+        }
+
+        diffMatrice.forEach((item) =>
+            targetSimilarityMatrice.splice(item.index, 0, item.data)
+        )
+    }
+
+    for (let i = 0; i < targetSimilarityMatrice.length; ++i) {
+        switch (true) {
+            case targetSimilarityMatrice[i][1][diff] == 1:
+                cssRules.push('color: green')
+                testedWords.push({
+                    text: targetSimilarityMatrice[i][0],
+                    status: 0
+                })
+                stats.similar += 1
+                break
+
+            case targetSimilarityMatrice[i][1].some(
+                (value) => value < 1 && value >= _options.similarityIndex.upper
+            ):
+                testedWords.push({
+                    text: targetSimilarityMatrice[i][0],
+                    status: 2
+                })
+                cssRules.push(
+                    'color:white; background: red; font-style: italic; text-decoration: underline'
+                )
+                stats.someWhatSimilar += 1
+                break
+
+            case targetSimilarityMatrice[i][1].some(
+                (value) => value >= _options.similarityIndex.upper
+            ):
+                // Calculate position shift / string displacement direction
+                const strSide =
+                    targetSimilarityMatrice[i][1].indexOf(
+                        Math.max(...targetSimilarityMatrice[i][1])
+                    ) > Math.floor(targetSimilarityMatrice[i][1].length / 2)
+                        ? '<-'
+                        : '->'
+
+                cssRules.push('color: orange;')
+                testedWords.push({
+                    text: `${strSide}${targetSimilarityMatrice[i][0]}`,
+                    status: 3
+                })
+                stats.positionWarnning += 1
+                break
+
+            case targetSimilarityMatrice[i][1].every(
+                (item) => item < _options.similarityIndex.lower
+            ):
+                cssRules.push(
+                    'color: red; background: gray; font-style: italic; text-decoration: underline'
+                )
+                testedWords.push({
+                    text: `[${targetSimilarityMatrice[i][0]}]`,
+                    status: 4
+                })
+                stats.missing += 1
+                break
+
+            default:
+                cssRules.push(
+                    'color: white; background: red; font-style: italic; text-decoration: line-through'
+                )
+                testedWords.push({
+                    text: targetSimilarityMatrice[i][0],
+                    status: 1
+                })
+                stats.notSimilar += 1
+                break
         }
     }
 
-    const wordClasses = {
-        0: 'word-similar',
-        1: 'word-not-similar',
-        2: 'word-some-what-similar',
-        3: 'word-position-warning',
-        4: 'word-missing'
-    }
+    console.info(
+        testedWords.map((word) => `%c${word.text}`).join(' '),
+        ...cssRules
+    )
 
-    const tooltip = document.createElement('div')
+    console.table(stats)
 
-    tooltip.setAttribute('id', `tf-tooltip-${invoker}`)
-    tooltip.className = 'tf-tooltip'
-    let span
-    words.forEach((word, index) => {
-        span = document.createElement('span')
-        span.setAttribute('index', `${index}`)
-        span.textContent = word.text
-        span.className = wordClasses[word.status]
-
-        tooltip.appendChild(span)
-    })
-
-    targetParent.classList.add('tf-tooltip-parent')
-    targetParent.appendChild(tooltip)
+    return `✅ All Done`
 }
 
 export {
@@ -567,6 +767,7 @@ export {
     similarity,
     rangeSimilarity,
     matchTargetToSource,
+    injectTooltip,
     checkWording,
-    injectTooltip
+    checkPropertiesWording
 }
